@@ -64,6 +64,16 @@ def acquisition_entropy(model, X_unlabeled, batch_size):
     # return [np.argmax(entropies)]
 
 
+def acquisition_badge(model, X_unlabeled, batch_size):
+    NUM_CLASSES = 4
+    probs = model.predict_proba(X_unlabeled)
+    y_pred = np.argmax(probs, axis=1)
+    grad = []
+    for k in range(NUM_CLASSES):
+        g = (probs[:, k] - np.equal(y_pred, np.full(len(y_pred), k)).astype(int)) * 42  # Replace 42 with z
+    probs - np.equals(y_pred, np.arange(NUM_CLASSES))
+
+
 '''
 def train_eval(X_train, y_train, X_val, y_val):
     clf = train(X_train, y_train)
