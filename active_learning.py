@@ -2,7 +2,8 @@ import numpy as np
 
 # Choose n points to add to training data (data to label)
 from data_handler import get_data, split_data
-from utils import train, eval_clf, plot_decision_boundary
+from utils import train, eval_clf, plot_decision_boundary, k_means_pp_seed
+import torch
 
 acquisition_names = ["Passive", "LC", "Margin", "Entropy"]
 
@@ -17,6 +18,8 @@ def acquisition(model, X_unlabeled, acq_idx, batch_size):
         return acquisition_margin(model, X_unlabeled, batch_size)
     elif acq_idx == 3:
         return acquisition_entropy(model, X_unlabeled, batch_size)
+    elif acq_idx == 4:
+        return acquisition_badge(model, X_unlabeled, batch_size)
     else:
         return acquisition_random(batch_size)
 
@@ -69,9 +72,22 @@ def acquisition_badge(model, X_unlabeled, batch_size):
     probs = model.predict_proba(X_unlabeled)
     y_pred = np.argmax(probs, axis=1)
     grad = []
+    z = model.z.detach().numpy()
+    # print(z.shape)
+    # print(z[0].shape)
     for k in range(NUM_CLASSES):
-        g = (probs[:, k] - np.equal(y_pred, np.full(len(y_pred), k)).astype(int)) * 42  # Replace 42 with z
-    probs - np.equals(y_pred, np.arange(NUM_CLASSES))
+        pmi = (probs[:, k] - np.equal(y_pred, np.full(len(y_pred), k)).astype(int))
+        pmi = np.expand_dims(pmi, axis=1)
+        g = pmi * z
+        # print("g shape:", g.shape)
+        grad.append(g)
+
+    n = len(X_unlabeled)
+    # grad = np.array(grad).reshape((n, -1, NUM_CLASSES))
+    grad = np.array(grad).reshape((n, -1))
+    # print("grad shape:", grad.shape)
+    indices = k_means_pp_seed(grad, batch_size)
+    return indices
 
 
 '''
@@ -124,7 +140,7 @@ def active_learn(X_train, y_train, X_val, y_val, n_start, n_end, batch_size, acq
 
 
 def stuff():
-    train, val = get_data()
+    train, val = get_data("Skewed")
     X_train, y_train, X_val, y_val = split_data(train, val)
 
     acc = active_learn(X_train, y_train, X_val, y_val, 20, 50, 10, 3)

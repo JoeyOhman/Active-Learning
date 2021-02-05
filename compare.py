@@ -4,10 +4,10 @@ from active_learning import active_learn
 from data_handler import get_data, split_data
 from plotting import plot_strategies, plot_datasets
 
-NUM_RUNS = 20
+NUM_RUNS = 10
 
 n_start = 20
-n_end = 300
+n_end = 360
 
 
 def compare_strategies(train, val, batch_size, dataset_name):
@@ -15,19 +15,20 @@ def compare_strategies(train, val, batch_size, dataset_name):
     lc_res = []
     margin_res = []
     entropy_res = []
+    badge_res = []
 
     for i in range(NUM_RUNS):
         np.random.shuffle(train)
         X_train, y_train, X_val, y_val = split_data(train, val)
 
         # Iterate through AL strategies
-        for idx, res_list in enumerate([passive_res, lc_res, margin_res, entropy_res]):
+        for idx, res_list in enumerate([passive_res, lc_res, margin_res, entropy_res, badge_res]):
             res = active_learn(X_train, y_train, X_val, y_val, n_start, n_end, batch_size, idx)
             res_list.append(res)
 
     x_range = np.arange(n_start, n_end + 1, batch_size)
-    results = [passive_res, lc_res, margin_res, entropy_res]
-    labels = ["Passive", "LC", "Margin", "Entropy"]
+    results = [passive_res, lc_res, margin_res, entropy_res, badge_res]
+    labels = ["Passive", "LC", "Margin", "Entropy", "Badge"]
     plot_strategies(x_range, results, labels, batch_size, dataset_name)
 
 
@@ -52,9 +53,9 @@ def compare_datasets(datasets, batch_size):
 
 
 def experiment():
-    test_strats = False
+    test_strats = True
 
-    batch_sizes = [1, 10, 60]
+    batch_sizes = [1, 10, 60, 120]
     batch_sizes.reverse()
     # Dataset names: Skewed, Balanced
 

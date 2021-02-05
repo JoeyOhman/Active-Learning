@@ -6,7 +6,8 @@ strategy_colors = {
     "Passive": "blue",
     "LC": "orange",
     "Margin": "green",
-    "Entropy": "red"
+    "Entropy": "red",
+    "Badge": "purple"
 }
 
 dataset_markers = {
